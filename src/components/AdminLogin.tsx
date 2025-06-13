@@ -90,7 +90,7 @@ const AdminLogin = ({ onLogin }: AdminLoginProps) => {
             <div className="relative">
               <Input
                 type={showPassword ? "text" : "password"}
-                placeholder="كلمة مرور المالك (32 حرف)"
+                placeholder="ادخل كلمة مرور"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="bg-gray-800 border-gray-700 text-white placeholder-gray-400 pr-12"
