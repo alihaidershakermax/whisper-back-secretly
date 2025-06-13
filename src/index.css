@@ -3,41 +3,30 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. */
-
-@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@200;300;400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700&display=swap');
 
 @layer base {
   :root {
     --background: 0 0 0;
     --foreground: 255 255 255;
-
     --card: 17 24 39;
     --card-foreground: 255 255 255;
-
     --popover: 17 24 39;
     --popover-foreground: 255 255 255;
-
     --primary: 147 51 234;
     --primary-foreground: 255 255 255;
-
     --secondary: 31 41 55;
     --secondary-foreground: 209 213 219;
-
     --muted: 31 41 55;
     --muted-foreground: 156 163 175;
-
     --accent: 147 51 234;
     --accent-foreground: 255 255 255;
-
     --destructive: 239 68 68;
     --destructive-foreground: 248 250 252;
-
     --border: 55 65 81;
     --input: 55 65 81;
     --ring: 147 51 234;
-
-    --radius: 0.75rem;
+    --radius: 0.5rem;
   }
 
   * {
@@ -48,23 +37,16 @@
     @apply bg-background text-foreground;
     font-family: 'Cairo', sans-serif;
     direction: rtl;
+    font-display: swap;
   }
 }
 
-.animate-float {
-  animation: float 6s ease-in-out infinite;
-}
-
-@keyframes float {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-20px); }
-}
-
+/* تحسينات الأداء */
 .fade-in {
-  animation: fadeIn 0.8s ease-out;
+  animation: fadeIn 0.3s ease-out;
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(30px); }
+  from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: translateY(0); }
 }

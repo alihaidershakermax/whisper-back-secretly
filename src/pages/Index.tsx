@@ -1,17 +1,50 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { MessageSquare, Send, Shield, Heart } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import { MessageSquare, Send, Settings } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 
+interface Message {
+  id: string;
+  content: string;
+  reply: string | null;
+  created_at: string;
+}
+
 const Index = () => {
   const [message, setMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [repliedMessages, setRepliedMessages] = useState<Message[]>([]);
   const { toast } = useToast();
+
+  // جلب الرسائل التي تم الرد عليها
+  useEffect(() => {
+    fetchRepliedMessages();
+  }, []);
+
+  const fetchRepliedMessages = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('messages')
+        .select('*')
+        .not('reply', 'is', null)
+        .order('created_at', { ascending: false })
+        .limit(10);
+
+      if (error) {
+        console.error('Error fetching replied messages:', error);
+        return;
+      }
+
+      setRepliedMessages(data || []);
+    } catch (error) {
+      console.error('Error:', error);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -64,106 +97,99 @@ const Index = () => {
     }
   };
 
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleString('ar-SA', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
   return (
-    <div className="min-h-screen bg-black">
-      {/* Header */}
-      <header className="p-6">
-        <div className="max-w-4xl mx-auto flex justify-between items-center">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-purple-600 rounded-xl flex items-center justify-center">
-              <MessageSquare className="h-6 w-6 text-white" />
-            </div>
-            <h1 className="text-2xl font-bold text-white">رسائل مجهولة</h1>
+    <div className="min-h-screen bg-black text-white">
+      {/* رأس الصفحة */}
+      <header className="border-b border-gray-800 p-4">
+        <div className="max-w-2xl mx-auto flex justify-between items-center">
+          <div className="flex items-center gap-2">
+            <MessageSquare className="h-6 w-6 text-purple-400" />
+            <h1 className="text-xl font-bold">رسائل مجهولة</h1>
           </div>
           <Link to="/admin">
-            <Button variant="outline" className="bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700">
-              لوحة التحكم
+            <Button variant="ghost" size="sm" className="text-gray-400 hover:text-white">
+              <Settings className="h-4 w-4" />
             </Button>
           </Link>
         </div>
       </header>
 
-      {/* Main Content */}
-      <main className="px-6 pb-20">
-        <div className="max-w-2xl mx-auto">
-          {/* Hero Section */}
-          <div className="text-center mb-12 fade-in">
-            <div className="inline-block animate-float mb-6">
-              <div className="w-20 h-20 bg-purple-600/20 rounded-full flex items-center justify-center backdrop-blur-sm border border-purple-500/30">
-                <Heart className="h-10 w-10 text-purple-400" />
+      {/* المحتوى الرئيسي */}
+      <main className="max-w-2xl mx-auto p-4 space-y-6">
+        {/* نموذج إرسال الرسالة */}
+        <Card className="bg-gray-900 border-gray-800">
+          <CardContent className="p-6">
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <Textarea
+                placeholder="اكتب رسالتك هنا..."
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                className="min-h-[100px] bg-gray-800 border-gray-700 text-white placeholder-gray-400 focus:border-purple-500 resize-none"
+                maxLength={500}
+              />
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-gray-500">
+                  {message.length}/500
+                </span>
+                <Button 
+                  type="submit" 
+                  disabled={isLoading || !message.trim()}
+                  className="bg-purple-600 hover:bg-purple-700 text-white"
+                >
+                  {isLoading ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></div>
+                      إرسال...
+                    </>
+                  ) : (
+                    <>
+                      <Send className="h-4 w-4 mr-2" />
+                      إرسال
+                    </>
+                  )}
+                </Button>
               </div>
-            </div>
-            <h2 className="text-4xl font-bold text-white mb-4">
-              شارك أفكارك بحرية
+            </form>
+          </CardContent>
+        </Card>
+
+        {/* عرض الردود */}
+        {repliedMessages.length > 0 && (
+          <div className="space-y-4">
+            <h2 className="text-lg font-semibold text-gray-300 border-b border-gray-800 pb-2">
+              آخر الردود
             </h2>
-            <p className="text-xl text-gray-300 leading-relaxed">
-              أرسل رسالة مجهولة بكل أمان وثقة. رأيك يهمني!
-            </p>
-          </div>
-
-          {/* Message Form */}
-          <Card className="bg-gray-900 border-gray-800 fade-in">
-            <CardHeader className="text-center">
-              <CardTitle className="text-2xl font-bold flex items-center justify-center gap-2 text-white">
-                <Shield className="h-6 w-6 text-purple-500" />
-                اكتب رسالتك
-              </CardTitle>
-              <CardDescription className="text-lg text-gray-400">
-                رسالتك ستبقى مجهولة تماماً
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleSubmit} className="space-y-6">
-                <Textarea
-                  placeholder="اكتب رسالتك هنا... يمكنك التعبير عن رأيك، طرح سؤال، أو مشاركة أي شيء تريده"
-                  value={message}
-                  onChange={(e) => setMessage(e.target.value)}
-                  className="min-h-[120px] text-lg resize-none bg-gray-800 border-gray-700 text-white placeholder-gray-500 focus:border-purple-500 transition-all duration-300"
-                  maxLength={500}
-                />
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-500">
-                    {message.length}/500 حرف
-                  </span>
-                  <Button 
-                    type="submit" 
-                    disabled={isLoading || !message.trim()}
-                    className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-3 text-lg"
-                  >
-                    {isLoading ? (
-                      <div className="flex items-center gap-2">
-                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                        جاري الإرسال...
-                      </div>
-                    ) : (
-                      <div className="flex items-center gap-2">
-                        <Send className="h-5 w-5" />
-                        إرسال الرسالة
-                      </div>
-                    )}
-                  </Button>
-                </div>
-              </form>
-            </CardContent>
-          </Card>
-
-          {/* Features */}
-          <div className="grid md:grid-cols-3 gap-6 mt-12 fade-in">
-            {[
-              { icon: Shield, title: "مجهول 100%", desc: "لا نجمع أي معلومات شخصية" },
-              { icon: MessageSquare, title: "رد سريع", desc: "ستحصل على رد في أقرب وقت" },
-              { icon: Heart, title: "بيئة آمنة", desc: "مساحة آمنة للتعبير عن الرأي" }
-            ].map((feature, index) => (
-              <Card key={index} className="bg-gray-900 border-gray-800 text-center">
-                <CardContent className="pt-6">
-                  <feature.icon className="h-8 w-8 text-purple-400 mx-auto mb-3" />
-                  <h3 className="font-bold text-white mb-2">{feature.title}</h3>
-                  <p className="text-gray-400 text-sm">{feature.desc}</p>
+            {repliedMessages.map((msg) => (
+              <Card key={msg.id} className="bg-gray-900 border-gray-800">
+                <CardContent className="p-4">
+                  <div className="space-y-3">
+                    <div className="text-gray-400 text-sm border-r-2 border-gray-700 pr-3">
+                      {msg.content}
+                    </div>
+                    <div className="bg-purple-900/30 border border-purple-800/50 rounded-lg p-3">
+                      <div className="text-purple-200 font-medium mb-1">رد الإدارة:</div>
+                      <div className="text-white">{msg.reply}</div>
+                    </div>
+                    <div className="text-xs text-gray-500 text-left">
+                      {formatDate(msg.created_at)}
+                    </div>
+                  </div>
                 </CardContent>
               </Card>
             ))}
           </div>
-        </div>
+        )}
       </main>
     </div>
   );
