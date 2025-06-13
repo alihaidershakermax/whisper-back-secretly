@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS public.config (
 
 -- إدخال كلمة مرور المالك المشفرة (32 حرف: AdminPassword123456789012345678)
 INSERT INTO public.config (key, value) 
-VALUES ('master_password_hash', encode(digest('AdminPassword123456789012345678', 'sha256'), 'hex'))
+VALUES ('master_password_hash', encode(digest('2c6ee24b09816a6f14f95d1698b24ead', 'sha256'), 'hex'))
 ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value;
 
 -- إنشاء دالة للتحقق من كلمة مرور المالك
